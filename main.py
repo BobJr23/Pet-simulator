@@ -1,250 +1,14 @@
 import time
+from time import strftime, localtime
 import json
 from plyer import notification
 from typing import override
 import random
+from pets import Dog, Cat, Hamster, Pet, PET_TO_ASCII
+from pet_manager import PetManager
+from pet_market import PetMarket
 import _curses as curses
-from _curses import KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN
-
-PET_TO_ASCII = {
-    "dog": r"""
-    / \__
-   (    @\___
-   /         O
-  /   (_____/
- /_____/   U
-""",
-    "cat": r"""
- /\_/\  
-( o.o ) 
- > ^ <
-""",
-    "bird": r"""
-   __
- <(o )___
-   (  ._>
-   """,
-    "sick": r"""
-    
-    """,
-}
-
-
-class Pet:
-    def __init__(
-        self,
-        name,
-        age,
-        species,
-        health,
-        hunger,
-        happiness,
-        energy,
-        last_fed,
-        last_played,
-        last_slept,
-        birth_time,
-    ):
-        self.name = name
-        self.age = age
-        self.species = species
-        self.health = health
-        self.hunger = hunger
-        self.happiness = happiness
-        self.energy = energy
-        self.last_fed = last_fed
-        self.last_played = last_played
-        self.last_slept = last_slept
-        self.birth_time = birth_time
-
-    def feed(self):
-        self.hunger = 100
-        self.last_fed = time.time()
-        print("Thanks for the food!")
-
-    def play(self):
-        self.happiness = 100
-        self.energy -= 10
-        self.last_played = time.time()
-
-    def sleep(self):
-        self.energy = 100
-        self.last_slept = time.time()
-
-    def greeting(self):
-        print("Hello! My name is " + self.name + ".")
-
-    def update(self):
-        self.hunger -= (time.time() - self.last_fed) / 1000
-        self.happiness -= (time.time() - self.last_played) / 1000
-        self.energy -= (time.time() - self.last_slept) / 1000
-        # age in hours
-        self.age = (time.time() - self.birth_time) / 3600  # Age in hours
-        if self.hunger < 50 or self.happiness < 50 or self.energy < 50:
-            self.health -= 1  # Health degrades if basic needs are not met
-            self.notify_unwell()
-            self.check_health()
-
-    def check_health(self):
-
-        if self.health <= 75:
-            print(f"{self.name} is sick.")
-            self.notify_unwell()
-        else:
-            print("Your pet is healthy. 😊")
-            print(PET_TO_ASCII[pet.species])
-
-    def notify_unwell(self):
-        notification.notify(
-            title="Pet Simulator",
-            message=f"{self.name} is hungry, unhappy, or tired!",
-            app_name="Pet Simulator",
-            timeout=10,
-        )
-
-    def __str__(self):
-        return f"{self.name} is a {self.species} that is {str(int(self.age))} hours old. It has {self.health} health, {self.hunger} hunger, {self.happiness} happiness, and {self.energy} energy."
-
-
-class Dog(Pet):
-    def __init__(
-        self,
-        name,
-        age,
-        health,
-        hunger,
-        happiness,
-        energy,
-        last_fed,
-        last_played,
-        last_slept,
-        birth_time,
-    ):
-        super().__init__(
-            name,
-            age,
-            "dog",
-            health,
-            hunger,
-            happiness,
-            energy,
-            last_fed,
-            last_played,
-            last_slept,
-            birth_time,
-        )
-
-    @override
-    def greeting(self):
-        print(f"{self.name} says: Woof!")
-
-
-class Cat(Pet):
-    def __init__(
-        self,
-        name,
-        age,
-        health,
-        hunger,
-        happiness,
-        energy,
-        last_fed,
-        last_played,
-        last_slept,
-        birth_time,
-    ):
-        super().__init__(
-            name,
-            age,
-            "cat",
-            health,
-            hunger,
-            happiness,
-            energy,
-            last_fed,
-            last_played,
-            last_slept,
-            birth_time,
-        )
-
-    @override
-    def greeting(self):
-        print(f"{self.name} says: Meow!")
-
-
-class Hamster(Pet):
-    def __init__(
-        self,
-        name,
-        age,
-        health,
-        hunger,
-        happiness,
-        energy,
-        last_fed,
-        last_played,
-        last_slept,
-        birth_time,
-    ):
-        super().__init__(
-            name,
-            age,
-            "hamster",
-            health,
-            hunger,
-            happiness,
-            energy,
-            last_fed,
-            last_played,
-            last_slept,
-            birth_time,
-        )
-
-    @override
-    def greeting(self):
-        print(f"{self.name} says: Squeak!")
-
-
-class PetManager:
-    def __init__(self):
-        self.pets = []
-        self.load()
-
-    def add_pet(self, pet):
-        self.pets.append(pet)
-
-    def save(self):
-        pets_data = [pet.__dict__ for pet in self.pets]
-        with open("pets.json", "w") as f:
-            json.dump(pets_data, f)
-
-    def load(self):
-        with open("pets.json", "r") as f:
-            pets_data = json.load(f)
-            self.pets = [Pet(**data) for data in pets_data]
-
-
-# Able to purchase pets
-class PetMarket:
-    def __init__(self):
-        self.pets = []
-
-    def add_pet(self, pet):
-        self.pets.append(pet)
-
-    def list_pets(self):
-        for i, pet in enumerate(self.pets):
-            print(f"{i + 1}: {pet.name} the {pet.species}")
-
-    def purchase_pet(self, index: int):
-        if 0 < index <= len(self.pets):
-            return self.pets.pop(index + 1)
-        else:
-            print("Invalid selection.")
-            return None
-
-    def refresh(self):
-        pass
+from _curses import KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN, KEY_ENTER
 
 
 def process_command(command):
@@ -254,19 +18,28 @@ def process_command(command):
     command, name = command.split(" ")
 
     pet = next(pet for pet in manager.pets if pet.name.lower() == name.lower())
-    if command == "feed":
-        pet.feed()
-        print(f"You have fed {pet.name}.")
-    elif command == "play":
-        pet.play()
-        print(f"You played with {pet.name}.")
-    elif command == "sleep":
-        pet.sleep()
-        print(f"{pet.name} is now sleeping.")
-    elif command == "status":
-        print(pet)
-    else:
-        print("Unknown command. Try 'feed', 'play', 'sleep', or 'status'.")
+    # switch
+    match command:
+        case 1:
+            pet.feed()
+        case 2:
+            pet.play()
+        case 3:
+            pet.sleep()
+
+    # if command == "feed":
+    #     pet.feed()
+    #     print(f"You have fed {pet.name}.")
+    # elif command == "play":
+    #     pet.play()
+    #     print(f"You played with {pet.name}.")
+    # elif command == "sleep":
+    #     pet.sleep()
+    #     print(f"{pet.name} is now sleeping.")
+    # elif command == "status":
+    #     print(pet)
+    # else:
+    #     print("Unknown command. Try 'feed', 'play', 'sleep', or 'status'.")
 
 
 def setup():
@@ -354,6 +127,7 @@ def add_pet(name, species):
 def display_pets(stdscr: curses.window):
     key = None
     selected_pet = 0
+    selected_command = "feed"
     color = curses.color_pair(1)
     while True:
         stdscr.clear()
@@ -388,8 +162,8 @@ def display_pets(stdscr: curses.window):
             stats_line = f"{pet.name}\nAge: {(pet.age + 0.5) // 1} hours old\nHealth: {pet.health}\nHunger: {pet.hunger}\nHappiness\n{pet.happiness}\nEnergy: {pet.energy}"
             # stdscr.addstr(start_y + len(pet_lines) + 1, start_x, stats_line, color)
             i = 0
-            time.sleep(5)
-            for name, x in pet.__dict__:
+
+            for name, x in pet.__dict__.items():
                 i += 1
                 stdscr.addstr(
                     start_y + len(pet_lines) + i, start_x, f"{name}: {x}", color
@@ -398,23 +172,26 @@ def display_pets(stdscr: curses.window):
                 color = curses.color_pair(1)
         key = stdscr.getch()
 
-        if key == curses.KEY_LEFT:
+        if key == KEY_LEFT:
             selected_pet -= 1
-        elif key == curses.KEY_RIGHT:
+        elif key == KEY_RIGHT:
             selected_pet += 1
-
-        if key == ord("q"):
+        elif key == KEY_UP:
+            selected_command += 1
+        elif key == KEY_DOWN:
+            selected_command -= 1
+        elif key == KEY_ENTER:
+            process_command(f"{selected_command} {manager.pets[selected_pet].name}")
+        elif key == ord("q"):
             break
         stdscr.refresh()
-        # process_command(key)
+
     return height, width
 
 
 if __name__ == "__main__":
     manager = PetManager()
-    print(manager.pets[0].__dict__)
-    exit()
-    # print(manager.pets)
+
     r = curses.initscr()
     r.keypad(True)
     curses.start_color()
