@@ -3,6 +3,7 @@ import json
 from plyer import notification
 from typing import override
 import random
+import _curses as curses
 
 PET_TO_ASCII = {
     "dog": r"""
@@ -24,13 +25,25 @@ PET_TO_ASCII = {
    """,
     "sick": r"""
     
-    """
+    """,
 }
 
 
 class Pet:
-    def __init__(self, name, age, species, health, hunger, happiness, energy, last_fed, last_played, last_slept,
-                 birth_time):
+    def __init__(
+        self,
+        name,
+        age,
+        species,
+        health,
+        hunger,
+        happiness,
+        energy,
+        last_fed,
+        last_played,
+        last_slept,
+        birth_time,
+    ):
         self.name = name
         self.age = age
         self.species = species
@@ -85,7 +98,7 @@ class Pet:
             title="Pet Simulator",
             message=f"{self.name} is hungry, unhappy, or tired!",
             app_name="Pet Simulator",
-            timeout=10
+            timeout=10,
         )
 
     def __str__(self):
@@ -93,9 +106,32 @@ class Pet:
 
 
 class Dog(Pet):
-    def __init__(self, name, age, health, hunger, happiness, energy, last_fed, last_played, last_slept, birth_time):
-        super().__init__(name, age, "dog", health, hunger, happiness, energy, last_fed, last_played, last_slept,
-                         birth_time)
+    def __init__(
+        self,
+        name,
+        age,
+        health,
+        hunger,
+        happiness,
+        energy,
+        last_fed,
+        last_played,
+        last_slept,
+        birth_time,
+    ):
+        super().__init__(
+            name,
+            age,
+            "dog",
+            health,
+            hunger,
+            happiness,
+            energy,
+            last_fed,
+            last_played,
+            last_slept,
+            birth_time,
+        )
 
     @override
     def greeting(self):
@@ -103,9 +139,32 @@ class Dog(Pet):
 
 
 class Cat(Pet):
-    def __init__(self, name, age, health, hunger, happiness, energy, last_fed, last_played, last_slept, birth_time):
-        super().__init__(name, age, "cat", health, hunger, happiness, energy, last_fed, last_played, last_slept,
-                         birth_time)
+    def __init__(
+        self,
+        name,
+        age,
+        health,
+        hunger,
+        happiness,
+        energy,
+        last_fed,
+        last_played,
+        last_slept,
+        birth_time,
+    ):
+        super().__init__(
+            name,
+            age,
+            "cat",
+            health,
+            hunger,
+            happiness,
+            energy,
+            last_fed,
+            last_played,
+            last_slept,
+            birth_time,
+        )
 
     @override
     def greeting(self):
@@ -113,19 +172,42 @@ class Cat(Pet):
 
 
 class Hamster(Pet):
-    def __init__(self, name, age, health, hunger, happiness, energy, last_fed, last_played, last_slept, birth_time):
-        super().__init__(name, age, "hamster", health, hunger, happiness, energy, last_fed, last_played, last_slept,
-                         birth_time)
+    def __init__(
+        self,
+        name,
+        age,
+        health,
+        hunger,
+        happiness,
+        energy,
+        last_fed,
+        last_played,
+        last_slept,
+        birth_time,
+    ):
+        super().__init__(
+            name,
+            age,
+            "hamster",
+            health,
+            hunger,
+            happiness,
+            energy,
+            last_fed,
+            last_played,
+            last_slept,
+            birth_time,
+        )
 
     @override
     def greeting(self):
         print(f"{self.name} says: Squeak!")
 
 
-
 class PetManager:
     def __init__(self):
         self.pets = []
+        self.load()
 
     def add_pet(self, pet):
         self.pets.append(pet)
@@ -140,6 +222,7 @@ class PetManager:
             pets_data = json.load(f)
             self.pets = [Pet(**data) for data in pets_data]
 
+
 # Able to purchase pets
 class PetMarket:
     def __init__(self):
@@ -152,8 +235,16 @@ class PetMarket:
         for i, pet in enumerate(self.pets):
             print(f"{i + 1}: {pet.name} the {pet.species}")
 
+    def purchase_pet(self, index: int):
+        if 0 < index <= len(self.pets):
+            return self.pets.pop(index + 1)
+        else:
+            print("Invalid selection.")
+            return None
+
     def refresh(self):
         pass
+
 
 def process_command(command):
     if command == "exit":
@@ -178,8 +269,30 @@ def process_command(command):
 
 
 def setup():
-    dog = Dog("Pedro", 5, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
-    cat = Cat("Whiskers", 3, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
+    dog = Dog(
+        "Pedro",
+        5,
+        100,
+        100,
+        100,
+        100,
+        time.time(),
+        time.time(),
+        time.time(),
+        time.time(),
+    )
+    cat = Cat(
+        "Whiskers",
+        3,
+        100,
+        100,
+        100,
+        100,
+        time.time(),
+        time.time(),
+        time.time(),
+        time.time(),
+    )
     manager.add_pet(dog)
     manager.add_pet(cat)
     manager.save()
@@ -189,14 +302,46 @@ def setup():
 # TODO: implement curses for better UI
 
 
-
 def add_pet(name, species):
     if species == "dog":
-        pet = Dog(name, 0, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
+        pet = Dog(
+            name,
+            0,
+            100,
+            100,
+            100,
+            100,
+            time.time(),
+            time.time(),
+            time.time(),
+            time.time(),
+        )
     elif species == "cat":
-        pet = Cat(name, 0, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
+        pet = Cat(
+            name,
+            0,
+            100,
+            100,
+            100,
+            100,
+            time.time(),
+            time.time(),
+            time.time(),
+            time.time(),
+        )
     elif species == "hamster":
-        pet = Hamster(name, 0, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
+        pet = Hamster(
+            name,
+            0,
+            100,
+            100,
+            100,
+            100,
+            time.time(),
+            time.time(),
+            time.time(),
+            time.time(),
+        )
     else:
         print("Unknown species.")
         return
@@ -205,11 +350,54 @@ def add_pet(name, species):
     manager.save()
 
 
+def display_pets(stdscr):
+
+    stdscr.clear()
+
+    # Get the height and width of the screen
+    height, width = stdscr.getmaxyx()
+
+    pets_per_row = 2
+
+    # Calculate spacing based on the screen width and number of pets per row
+    spacing_x = width // pets_per_row
+
+    # Iterate over each pet and its stats
+    for index, (pet) in enumerate(manager.pets):
+        # Calculate pet's position in the grid
+        row = index // pets_per_row
+        col = index % pets_per_row
+        start_y = (
+            row * (height // len(manager.pets)) + 1
+        )  # Start a bit down from the top
+        start_x = col * spacing_x + 1  # Start a bit in from the left
+
+        # Display the pet ASCII art
+        pet_lines = PET_TO_ASCII[pet.species].split("\n")
+        for i, line in enumerate(pet_lines):
+            stdscr.addstr(start_y + i, start_x, line)
+
+        # Display the pet's stats below the ASCII art
+        stats_line = f"{pet.name}, Age: {pet.age}, Health: {pet.health}, Hunger: {pet.hunger}, Happiness: {pet.happiness}, Energy: {pet.energy}"
+        stdscr.addstr(start_y + len(pet_lines) + 1, start_x, stats_line)
+
+    # stdscr.refresh()
+    stdscr.getch()
+    return height, width
+
+
 if __name__ == "__main__":
     manager = PetManager()
+
+    print(manager.pets)
+    r = curses.initscr()
+    h, w = display_pets(r)
+    curses.endwin()
+    print(h, w)
     # Use setup if just starting
     # setup()
-    manager.load()
+    exit()
+
     for pet in manager.pets:
         pet.feed()
         pet.play()
@@ -219,5 +407,9 @@ if __name__ == "__main__":
         print(PET_TO_ASCII[pet.species])
 
     while True:
-        command = input("What is your command \"(feed, play, sleep, status) + name\" or \"exit\" \n > ")
-        process_command(command)
+
+        process_command(
+            input(
+                'What is your command "(feed, play, sleep, status) + name" or "exit" \n > '
+            )
+        )
