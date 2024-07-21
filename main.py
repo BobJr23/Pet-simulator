@@ -353,19 +353,24 @@ def add_pet(name, species):
 
 def display_pets(stdscr: curses.window):
     key = None
+    selected_pet = 0
+    color = curses.color_pair(1)
     while True:
         stdscr.clear()
 
-        # Get the height and width of the screen
         height, width = stdscr.getmaxyx()
-        current_y, current_x = stdscr.getyx()
-        pets_per_row = 2
+
+        pets_per_row = 5
 
         # Calculate spacing based on the screen width and number of pets per row
         spacing_x = width // pets_per_row
 
         # Iterate over each pet and its stats
         for index, (pet) in enumerate(manager.pets):
+            if index == selected_pet:
+                color = curses.color_pair(2)
+                stdscr.addstr(0, 0, f"Selected: {pet.name}")
+
             # Calculate pet's position in the grid
             row = index // pets_per_row
             col = index % pets_per_row
@@ -377,25 +382,29 @@ def display_pets(stdscr: curses.window):
             # Display the pet ASCII art
             pet_lines = PET_TO_ASCII[pet.species].split("\n")
             for i, line in enumerate(pet_lines):
-                stdscr.addstr(start_y + i, start_x, line)
+                stdscr.addstr(start_y + i, start_x, line, color)
 
             # Display the pet's stats below the ASCII art
-            stats_line = f"{pet.name}, Age: {pet.age}, Health: {pet.health}, Hunger: {pet.hunger}, Happiness: {pet.happiness}, Energy: {pet.energy}"
-            stdscr.addstr(start_y + len(pet_lines) + 1, start_x, stats_line)
-
+            stats_line = f"{pet.name}\nAge: {(pet.age + 0.5) // 1} hours old\nHealth: {pet.health}\nHunger: {pet.hunger}\nHappiness\n{pet.happiness}\nEnergy: {pet.energy}"
+            # stdscr.addstr(start_y + len(pet_lines) + 1, start_x, stats_line, color)
+            i = 0
+            time.sleep(5)
+            for name, x in pet.__dict__:
+                i += 1
+                stdscr.addstr(
+                    start_y + len(pet_lines) + i, start_x, f"{name}: {x}", color
+                )
+            if index == selected_pet:
+                color = curses.color_pair(1)
         key = stdscr.getch()
-        if key == curses.KEY_UP:
-            cursor_y = max(0, current_y - 1)  # Move up but not beyond the top
-        elif key == curses.KEY_DOWN:
-            cursor_y = current_y + 1  # Move down
-        elif key == curses.KEY_LEFT:
-            cursor_x = max(0, current_x - 1)  # Move left but not beyond the left edge
+
+        if key == curses.KEY_LEFT:
+            selected_pet -= 1
         elif key == curses.KEY_RIGHT:
-            cursor_x = current_x + 1  # Move right
+            selected_pet += 1
 
-        if key == "q":
+        if key == ord("q"):
             break
-
         stdscr.refresh()
         # process_command(key)
     return height, width
@@ -403,13 +412,18 @@ def display_pets(stdscr: curses.window):
 
 if __name__ == "__main__":
     manager = PetManager()
-
-    print(manager.pets)
+    print(manager.pets[0].__dict__)
+    exit()
+    # print(manager.pets)
     r = curses.initscr()
     r.keypad(True)
-    h, w = display_pets(r)
+    curses.start_color()
+
+    curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    display_pets(r)
     curses.endwin()
-    print(h, w)
+
     # Use setup if just starting
     # setup()
     exit()
