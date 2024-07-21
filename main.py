@@ -20,7 +20,7 @@ PET_TO_ASCII = {
  <(o )___
    (  ._>
    """,
-    "sick" : r"""
+    "sick": r"""
     
     """
 }
@@ -44,6 +44,7 @@ class Pet:
     def feed(self):
         self.hunger = 100
         self.last_fed = time.time()
+        print("Thanks for the food!")
 
     def play(self):
         self.happiness = 100
@@ -54,19 +55,22 @@ class Pet:
         self.energy = 100
         self.last_slept = time.time()
 
+    def greeting(self):
+        print("Hello! My name is " + self.name + ".")
+
     def update(self):
         self.hunger -= (time.time() - self.last_fed) / 1000
         self.happiness -= (time.time() - self.last_played) / 1000
         self.energy -= (time.time() - self.last_slept) / 1000
-
-        self.age = (time.time() - self.birth_time) / 31536000  # Age in years
+        # age in hours
+        self.age = (time.time() - self.birth_time) / 3600  # Age in hours
         if self.hunger < 50 or self.happiness < 50 or self.energy < 50:
             self.health -= 1  # Health degrades if basic needs are not met
             self.notify_unwell()
             self.check_health()
-            
+
     def check_health(self):
-        
+
         if self.health <= 75:
             print(f"{self.name} is sick.")
             self.notify_unwell()
@@ -83,7 +87,25 @@ class Pet:
         )
 
     def __str__(self):
-        return f"{self.name} is a {self.species} that is {self.age} years old. It has {self.health} health, {self.hunger} hunger, {self.happiness} happiness, and {self.energy} energy."
+        return f"{self.name} is a {self.species} that is {str(int(self.age))} hours old. It has {self.health} health, {self.hunger} hunger, {self.happiness} happiness, and {self.energy} energy."
+
+
+class Dog(Pet):
+    def __init__(self, name, age, health, hunger, happiness, energy, last_fed, last_played, last_slept, birth_time):
+        super().__init__(name, age, "dog", health, hunger, happiness, energy, last_fed, last_played, last_slept,
+                         birth_time)
+
+    def greeting(self):
+        print(f"{self.name} says: Woof!")
+
+
+class Cat(Pet):
+    def __init__(self, name, age, health, hunger, happiness, energy, last_fed, last_played, last_slept, birth_time):
+        super().__init__(name, age, "cat", health, hunger, happiness, energy, last_fed, last_played, last_slept,
+                         birth_time)
+
+    def greeting(self):
+        print(f"{self.name} says: Meow!")
 
 
 class PetManager:
@@ -105,7 +127,11 @@ class PetManager:
 
 
 def process_command(command):
+    if command == "exit":
+        manager.save()
+        exit()
     command, name = command.split(" ")
+
     pet = next(pet for pet in manager.pets if pet.name.lower() == name.lower())
     if command == "feed":
         pet.feed()
@@ -122,13 +148,19 @@ def process_command(command):
         print("Unknown command. Try 'feed', 'play', 'sleep', or 'status'.")
 
 
-if __name__ == "__main__":
-    manager = PetManager()
-    dog = Pet("Pedro", 5, "dog", 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
-    cat = Pet("Whiskers", 3, "cat", 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
+def setup():
+    dog = Dog("Pedro", 5, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
+    cat = Cat("Whiskers", 3, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
     manager.add_pet(dog)
     manager.add_pet(cat)
     manager.save()
+    manager.load()
+
+
+if __name__ == "__main__":
+    manager = PetManager()
+    # Use setup if just starting
+    # setup()
     manager.load()
     for pet in manager.pets:
         pet.feed()
@@ -139,11 +171,5 @@ if __name__ == "__main__":
         print(PET_TO_ASCII[pet.species])
 
     while True:
-
-        for pet in manager.pets:
-            command = input("What is your command?")
-            process_command(command)
-            pet.update()
-            print(pet)
-            print(PET_TO_ASCII[pet.species])
-            manager.save()
+        command = input("What is your command \"(feed, play, sleep, status) + name\" or \"exit\" \n > ")
+        process_command(command)
