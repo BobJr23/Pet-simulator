@@ -41,6 +41,7 @@ class Pet:
         last_played,
         last_slept,
         birth_time,
+        birth_date=None,
     ):
         self.name = name
         self.age = age

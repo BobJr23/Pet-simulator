@@ -1,14 +1,70 @@
 import time
-from time import strftime, localtime
-import json
-from plyer import notification
-from typing import override
-import random
-from pets import Dog, Cat, Hamster, Pet, PET_TO_ASCII
+from pets import Dog, Cat, Hamster, Pet, PET_TO_ASCII, localtime, strftime
 from pet_manager import PetManager
 from pet_market import PetMarket
 import _curses as curses
 from _curses import KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN
+import os
+
+
+def setup():
+    # Use to speed up testing
+    # new_account = False
+    # filename = "pets"
+    if "c" in input("Create new account or load saved? (C/L): ").lower():
+        new_account = True
+        filename = input("Enter a name for your save: ")
+    else:
+        new_account = False
+
+        filename = input(
+            "Enter the name of your save. The options are: "
+            + "".join(
+                [
+                    f'\n> "{x[:-5]}"'
+                    + " last save: "
+                    + strftime("%Y-%m-%d %I:%M", localtime(os.stat(x).st_mtime))
+                    for x in os.listdir()
+                    if x.endswith(".json")
+                ]
+            )
+            + "\n > "
+        )
+
+    manager = PetManager()
+    if new_account:
+        dog = Dog(
+            "Pedro",
+            5,
+            100,
+            100,
+            100,
+            100,
+            time.time(),
+            time.time(),
+            time.time(),
+            time.time(),
+        )
+        cat = Cat(
+            "Whiskers",
+            3,
+            100,
+            100,
+            100,
+            100,
+            time.time(),
+            time.time(),
+            time.time(),
+            time.time(),
+        )
+        manager.add_pet(dog)
+        manager.add_pet(cat)
+        manager.save(filename)
+        manager.load(filename)
+    else:
+        manager.load(filename)
+
+    return manager, filename
 
 
 def process_command(command):
@@ -42,37 +98,6 @@ def process_command(command):
     #     print(pet)
     # else:
     #     print("Unknown command. Try 'feed', 'play', 'sleep', or 'status'.")
-
-
-def setup():
-    dog = Dog(
-        "Pedro",
-        5,
-        100,
-        100,
-        100,
-        100,
-        time.time(),
-        time.time(),
-        time.time(),
-        time.time(),
-    )
-    cat = Cat(
-        "Whiskers",
-        3,
-        100,
-        100,
-        100,
-        100,
-        time.time(),
-        time.time(),
-        time.time(),
-        time.time(),
-    )
-    manager.add_pet(dog)
-    manager.add_pet(cat)
-    manager.save()
-    manager.load()
 
 
 # TODO: implement curses for better UI
@@ -153,7 +178,7 @@ def display_pets(stdscr: curses.window):
             row = index // pets_per_row
             col = index % pets_per_row
             start_y = (
-                row * (height // len(manager.pets)) + 1
+                row * (height // len(manager.pets)) + 5
             )  # Start a bit down from the top
             start_x = col * spacing_x + 15  # Start a bit in from the left
 
@@ -177,7 +202,7 @@ def display_pets(stdscr: curses.window):
         for i, command in enumerate(COMMANDS):
             if i == selected_command:
                 color = curses.color_pair(3)
-            stdscr.addstr(4 + i, 0, command, color)
+            stdscr.addstr(start_y + i, 0, command, color)
             color = curses.color_pair(1)
         key = stdscr.getch()
 
@@ -202,7 +227,8 @@ def display_pets(stdscr: curses.window):
 
 
 if __name__ == "__main__":
-    manager = PetManager()
+
+    manager, file = setup()
 
     r = curses.initscr()
     curses.curs_set(0)
@@ -213,24 +239,9 @@ if __name__ == "__main__":
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
     display_pets(r)
+    manager.load(file)
     curses.endwin()
 
     # Use setup if just starting
     # setup()
     exit()
-
-    for pet in manager.pets:
-        pet.feed()
-        pet.play()
-        pet.sleep()
-        pet.update()
-        print(pet)
-        print(PET_TO_ASCII[pet.species])
-
-    while True:
-
-        process_command(
-            input(
-                'What is your command "(feed, play, sleep, status) + name" or "exit" \n > '
-            )
-        )
