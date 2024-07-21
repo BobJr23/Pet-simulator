@@ -1,9 +1,7 @@
 import _curses as curses
 from _curses import KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN
 from random import randint
-import os
 
-# os.system("mode con cols=60 lines=60")
 # Constants
 KEY_ESC = 27
 
@@ -14,7 +12,6 @@ half_width = int(width / 2)
 title = " snek "
 
 curses.initscr()
-print("bug")
 win = curses.newwin(height, width, 0, 0)
 
 # curses parameters

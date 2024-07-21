@@ -4,6 +4,7 @@ from plyer import notification
 from typing import override
 import random
 import _curses as curses
+from _curses import KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN
 
 PET_TO_ASCII = {
     "dog": r"""
@@ -350,39 +351,53 @@ def add_pet(name, species):
     manager.save()
 
 
-def display_pets(stdscr):
+def display_pets(stdscr: curses.window):
+    key = None
+    while True:
+        stdscr.clear()
 
-    stdscr.clear()
+        # Get the height and width of the screen
+        height, width = stdscr.getmaxyx()
+        current_y, current_x = stdscr.getyx()
+        pets_per_row = 2
 
-    # Get the height and width of the screen
-    height, width = stdscr.getmaxyx()
+        # Calculate spacing based on the screen width and number of pets per row
+        spacing_x = width // pets_per_row
 
-    pets_per_row = 2
+        # Iterate over each pet and its stats
+        for index, (pet) in enumerate(manager.pets):
+            # Calculate pet's position in the grid
+            row = index // pets_per_row
+            col = index % pets_per_row
+            start_y = (
+                row * (height // len(manager.pets)) + 1
+            )  # Start a bit down from the top
+            start_x = col * spacing_x + 1  # Start a bit in from the left
 
-    # Calculate spacing based on the screen width and number of pets per row
-    spacing_x = width // pets_per_row
+            # Display the pet ASCII art
+            pet_lines = PET_TO_ASCII[pet.species].split("\n")
+            for i, line in enumerate(pet_lines):
+                stdscr.addstr(start_y + i, start_x, line)
 
-    # Iterate over each pet and its stats
-    for index, (pet) in enumerate(manager.pets):
-        # Calculate pet's position in the grid
-        row = index // pets_per_row
-        col = index % pets_per_row
-        start_y = (
-            row * (height // len(manager.pets)) + 1
-        )  # Start a bit down from the top
-        start_x = col * spacing_x + 1  # Start a bit in from the left
+            # Display the pet's stats below the ASCII art
+            stats_line = f"{pet.name}, Age: {pet.age}, Health: {pet.health}, Hunger: {pet.hunger}, Happiness: {pet.happiness}, Energy: {pet.energy}"
+            stdscr.addstr(start_y + len(pet_lines) + 1, start_x, stats_line)
 
-        # Display the pet ASCII art
-        pet_lines = PET_TO_ASCII[pet.species].split("\n")
-        for i, line in enumerate(pet_lines):
-            stdscr.addstr(start_y + i, start_x, line)
+        key = stdscr.getch()
+        if key == curses.KEY_UP:
+            cursor_y = max(0, current_y - 1)  # Move up but not beyond the top
+        elif key == curses.KEY_DOWN:
+            cursor_y = current_y + 1  # Move down
+        elif key == curses.KEY_LEFT:
+            cursor_x = max(0, current_x - 1)  # Move left but not beyond the left edge
+        elif key == curses.KEY_RIGHT:
+            cursor_x = current_x + 1  # Move right
 
-        # Display the pet's stats below the ASCII art
-        stats_line = f"{pet.name}, Age: {pet.age}, Health: {pet.health}, Hunger: {pet.hunger}, Happiness: {pet.happiness}, Energy: {pet.energy}"
-        stdscr.addstr(start_y + len(pet_lines) + 1, start_x, stats_line)
+        if key == "q":
+            break
 
-    # stdscr.refresh()
-    stdscr.getch()
+        stdscr.refresh()
+        # process_command(key)
     return height, width
 
 
@@ -391,6 +406,7 @@ if __name__ == "__main__":
 
     print(manager.pets)
     r = curses.initscr()
+    r.keypad(True)
     h, w = display_pets(r)
     curses.endwin()
     print(h, w)
