@@ -19,7 +19,11 @@ PET_TO_ASCII = {
    __
  <(o )___
    (  ._>
-   """}
+   """,
+    "sick" : r"""
+    
+    """
+}
 
 
 class Pet:
@@ -58,9 +62,19 @@ class Pet:
         self.age = (time.time() - self.birth_time) / 31536000  # Age in years
         if self.hunger < 50 or self.happiness < 50 or self.energy < 50:
             self.health -= 1  # Health degrades if basic needs are not met
-            self.notify()
+            self.notify_unwell()
+            self.check_health()
+            
+    def check_health(self):
+        
+        if self.health <= 75:
+            print(f"{self.name} is sick.")
+            self.notify_unwell()
+        else:
+            print("Your pet is healthy. 😊")
+            print(PET_TO_ASCII[pet.species])
 
-    def notify(self):
+    def notify_unwell(self):
         notification.notify(
             title="Pet Simulator",
             message=f"{self.name} is hungry, unhappy, or tired!",
@@ -91,7 +105,21 @@ class PetManager:
 
 
 def process_command(command):
-    pass
+    command, name = command.split(" ")
+    pet = next(pet for pet in manager.pets if pet.name.lower() == name.lower())
+    if command == "feed":
+        pet.feed()
+        print(f"You have fed {pet.name}.")
+    elif command == "play":
+        pet.play()
+        print(f"You played with {pet.name}.")
+    elif command == "sleep":
+        pet.sleep()
+        print(f"{pet.name} is now sleeping.")
+    elif command == "status":
+        print(pet)
+    else:
+        print("Unknown command. Try 'feed', 'play', 'sleep', or 'status'.")
 
 
 if __name__ == "__main__":
