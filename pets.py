@@ -70,7 +70,7 @@ class Pet:
         self.last_slept = time()
 
     def greeting(self):
-        print("Hello! My name is " + self.name + ".")
+        return "Hello! My name is " + self.name + "."
 
     def update(self):
         self.hunger -= (time() - self.last_fed) / 1000
@@ -134,7 +134,7 @@ class Dog(Pet):
 
     @override
     def greeting(self):
-        print(f"{self.name} says: Woof!")
+        return f"{self.name} says: Woof!"
 
 
 class Cat(Pet):
@@ -167,7 +167,7 @@ class Cat(Pet):
 
     @override
     def greeting(self):
-        print(f"{self.name} says: Meow!")
+        return f"{self.name} says: Meow!"
 
 
 class Hamster(Pet):
@@ -200,4 +200,4 @@ class Hamster(Pet):
 
     @override
     def greeting(self):
-        print(f"{self.name} says: Squeak!")
+        return f"{self.name} says: Squeak!"
