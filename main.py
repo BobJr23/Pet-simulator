@@ -1,6 +1,8 @@
 import time
 import json
 from plyer import notification
+from typing import override
+import random
 
 PET_TO_ASCII = {
     "dog": r"""
@@ -95,6 +97,7 @@ class Dog(Pet):
         super().__init__(name, age, "dog", health, hunger, happiness, energy, last_fed, last_played, last_slept,
                          birth_time)
 
+    @override
     def greeting(self):
         print(f"{self.name} says: Woof!")
 
@@ -104,8 +107,20 @@ class Cat(Pet):
         super().__init__(name, age, "cat", health, hunger, happiness, energy, last_fed, last_played, last_slept,
                          birth_time)
 
+    @override
     def greeting(self):
         print(f"{self.name} says: Meow!")
+
+
+class Hamster(Pet):
+    def __init__(self, name, age, health, hunger, happiness, energy, last_fed, last_played, last_slept, birth_time):
+        super().__init__(name, age, "hamster", health, hunger, happiness, energy, last_fed, last_played, last_slept,
+                         birth_time)
+
+    @override
+    def greeting(self):
+        print(f"{self.name} says: Squeak!")
+
 
 
 class PetManager:
@@ -125,6 +140,20 @@ class PetManager:
             pets_data = json.load(f)
             self.pets = [Pet(**data) for data in pets_data]
 
+# Able to purchase pets
+class PetMarket:
+    def __init__(self):
+        self.pets = []
+
+    def add_pet(self, pet):
+        self.pets.append(pet)
+
+    def list_pets(self):
+        for i, pet in enumerate(self.pets):
+            print(f"{i + 1}: {pet.name} the {pet.species}")
+
+    def refresh(self):
+        pass
 
 def process_command(command):
     if command == "exit":
@@ -155,6 +184,25 @@ def setup():
     manager.add_pet(cat)
     manager.save()
     manager.load()
+
+
+# TODO: implement curses for better UI
+
+
+
+def add_pet(name, species):
+    if species == "dog":
+        pet = Dog(name, 0, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
+    elif species == "cat":
+        pet = Cat(name, 0, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
+    elif species == "hamster":
+        pet = Hamster(name, 0, 100, 100, 100, 100, time.time(), time.time(), time.time(), time.time())
+    else:
+        print("Unknown species.")
+        return
+    manager.add_pet(pet)
+    print(f"Added {name} the {species} to your pets.")
+    manager.save()
 
 
 if __name__ == "__main__":
