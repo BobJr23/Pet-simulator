@@ -90,8 +90,12 @@ def process_command(command, shop: PetMarket, pet_list: list, stdscr):
             pet_list = shop.pets
             return "Refreshed shop.", pet_list
         case 0:
-            pet.feed()
-            return f"You have fed {pet.name}.\n{pet.greeting()}", pet_list
+            if shop.money >= 4:
+                shop.money -= 4
+                pet.hunger = 100
+                return f"You have fed {pet.name}.\n{pet.greeting()}", pet_list
+            else:
+                return "Not enough money to feed", pet_list
         case 1:
             pet.play()
             return f"You have played with {pet.name}.\n{pet.greeting()}", pet_list
@@ -115,6 +119,18 @@ def process_command(command, shop: PetMarket, pet_list: list, stdscr):
                 return f"You rolled a {roll}", pet_list
             else:
                 return "Not enough money", pet_list
+        # vet
+        case 7:
+            if shop.money >= 15:
+                shop.money -= 15
+                pet.health = 100
+                pet.hunger = 100
+                pet.happiness = 100
+                pet.energy = 100
+
+                return f"You took {pet.name} to the vet!", pet_list
+            else:
+                return "Not enough money", pet_list
         case _:
             return (
                 "Invalid command, make sure a command and pet name are colored in",
@@ -122,17 +138,18 @@ def process_command(command, shop: PetMarket, pet_list: list, stdscr):
             )
 
 
-def get_user_input(stdscr, prompt):
+def get_user_input(stdscr: curses.window, prompt):
+    stdscr.nodelay(False)
     curses.echo()  # Enable echoing of characters typed by the user
     stdscr.clear()
     stdscr.addstr(0, 0, prompt)
     stdscr.refresh()
     input_str = stdscr.getstr(1, 2)  # Get user input from the second line
     curses.noecho()  # Disable echoing back to the screen
+    stdscr.nodelay(True)
     return input_str.decode("utf-8")
 
 
-# EDIT UI OPTIONS TODO
 def change_display_options(stdscr):
     option = get_user_input(stdscr, "What option do you want to change? (Color, )\n> ")
     match option:
@@ -167,6 +184,7 @@ def display_pets(stdscr: curses.window, money, next_save):
     if next_save < time.time():
         money += 50
         next_save = time.time() + 86400
+    stdscr.nodelay(True)
     shop = PetMarket(money)
     shopping = False
     key = None
@@ -174,18 +192,32 @@ def display_pets(stdscr: curses.window, money, next_save):
     selected_command = 0
     color = curses.color_pair(1)
     status = "Press enter to select a command for the selected pet Up-down arrow keys for commands, Left-right arrow keys for pet selection."
-    command_list = ["feed", "play", "sleep", "shop", "rename", "UI settings", "roll"]
+    command_list = [
+        "feed",
+        "play",
+        "sleep",
+        "shop",
+        "rename",
+        "UI settings",
+        "roll",
+        "vet",
+    ]
     command_offset = 0
     pets_per_row = 5
     height, width = stdscr.getmaxyx()
     spacing_x = width // pets_per_row
     pet_list = manager.pets
+    start_time = time.time()
+
     while True:
         stdscr.clear()
+        stdscr.addstr(4, 0, str(key))
 
-        stdscr.addstr(1, 0, status)
         stdscr.addstr(2, width // 2 - 4, f"Money: ${shop.money}")
 
+        if int(time.time() - start_time) % 60 == 0:
+            for pet in manager.pets:
+                pet.update()
         if next_save < time.time():
             money += 50
             next_save = time.time() + 86400
@@ -265,6 +297,7 @@ def display_pets(stdscr: curses.window, money, next_save):
                     "rename",
                     "UI settings",
                     "roll",
+                    "vet",
                 ]
             else:
                 status, pet_list = process_command(
@@ -275,7 +308,9 @@ def display_pets(stdscr: curses.window, money, next_save):
                 )
         elif key == ord("q"):
             break
+
         stdscr.refresh()
+        stdscr.timeout(1000)
 
     return shop.money, next_save
 
