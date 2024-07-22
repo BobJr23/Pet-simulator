@@ -15,8 +15,10 @@ PET_TO_ASCII = {
  /\_/\  
 ( o.o ) 
  > ^ <
+ 
+ 
 """,
-    "bird": r"""
+    "hamster": r"""
    __
  <(o )___
    (  ._>
@@ -59,7 +61,6 @@ class Pet:
     def feed(self):
         self.hunger = 100
         self.last_fed = time()
-        print("Thanks for the food!")
 
     def play(self):
         self.happiness = 100

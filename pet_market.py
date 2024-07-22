@@ -1,3 +1,8 @@
+import random
+from pets import Pet
+from time import time
+
+
 class PetMarket:
     def __init__(self):
         self.pets = []
@@ -17,4 +22,31 @@ class PetMarket:
             return None
 
     def refresh(self):
-        pass
+        self.pets = []
+        for x in range(5):
+            self.add_pet(
+                Pet(
+                    random.choice(["dog", "cat", "hamster"]),
+                    random.choice(
+                        [
+                            "Rover",
+                            "Chip",
+                            "Fluffy",
+                            "Nibbles",
+                            "Whiskers",
+                            "Fido",
+                            "Mittens",
+                            "Buddy",
+                        ]
+                    ),
+                    0,
+                    100,
+                    100,
+                    100,
+                    100,
+                    time(),
+                    time(),
+                    time(),
+                    time(),
+                )
+            )

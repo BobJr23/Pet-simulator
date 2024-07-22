@@ -1,5 +1,5 @@
 import time
-from pets import Dog, Cat, Hamster, Pet, PET_TO_ASCII, localtime, strftime
+from pets import Dog, Cat, Hamster, PET_TO_ASCII, localtime, strftime
 from pet_manager import PetManager
 from pet_market import PetMarket
 import _curses as curses
@@ -74,15 +74,17 @@ def process_command(command):
     pet = next(pet for pet in manager.pets if pet.name.lower() == name.lower())
     # switch
     match int(command):
-        case 1:
+        case 0:
             pet.feed()
             return f"You have fed {pet.name}.\n{pet.greeting()}"
-        case 2:
+        case 1:
             pet.play()
             return f"You have played with {pet.name}.\n{pet.greeting()}"
-        case 3:
+        case 2:
             pet.sleep()
             return f"{pet.name} is now sleeping.\n{pet.greeting()}"
+        case 3:
+            return "SHOP"
         case _:
             return "Invalid command, make sure a command and pet name are colored in"
     # if command == "feed":
@@ -152,24 +154,27 @@ def add_pet(name, species):
 
 
 def display_pets(stdscr: curses.window):
+    shop = PetMarket()
+    shopping = False
     key = None
     selected_pet = 0
     selected_command = 0
     color = curses.color_pair(1)
-    status = "Press enter to select a command for the selected pet."
-    COMMANDS = ["feed", "play", "sleep"]
+    status = "Press enter to select a command for the selected pet Up-down arrow keys for commands, Left-right arrow keys for pet selection."
+    COMMANDS = ["feed", "play", "sleep", "shop"]
+    COMMANDS_SHOP = ["buy", "refresh"]
+    pets_per_row = 5
+    height, width = stdscr.getmaxyx()
+    spacing_x = width // pets_per_row
+    pet_list = manager.pets
     while True:
         stdscr.clear()
-        stdscr.addstr(1, 0, status)
-        height, width = stdscr.getmaxyx()
-
-        pets_per_row = 5
 
         # Calculate spacing based on the screen width and number of pets per row
-        spacing_x = width // pets_per_row
+        stdscr.addstr(1, 0, status)
 
         # Iterate over each pet and its stats
-        for index, (pet) in enumerate(manager.pets):
+        for index, (pet) in enumerate(pet_list):
             if index == selected_pet:
                 color = curses.color_pair(2)
                 stdscr.addstr(0, 0, f"Selected: {pet.name}")
@@ -178,7 +183,7 @@ def display_pets(stdscr: curses.window):
             row = index // pets_per_row
             col = index % pets_per_row
             start_y = (
-                row * (height // len(manager.pets)) + 5
+                row * (height // len(pet_list)) + 5
             )  # Start a bit down from the top
             start_x = col * spacing_x + 15  # Start a bit in from the left
 
@@ -187,23 +192,25 @@ def display_pets(stdscr: curses.window):
             for i, line in enumerate(pet_lines):
                 stdscr.addstr(start_y + i, start_x, line, color)
 
-            # Display the pet's stats below the ASCII art
-            stats_line = f"{pet.name}\nAge: {(pet.age + 0.5) // 1} hours old\nHealth: {pet.health}\nHunger: {pet.hunger}\nHappiness\n{pet.happiness}\nEnergy: {pet.energy}"
-            # stdscr.addstr(start_y + len(pet_lines) + 1, start_x, stats_line, color)
+        if shopping:
+            ...
+        else:
+
             i = 0
 
             for name, x in pet.__dict__.items():
+                if index == selected_pet:
+                    color = curses.color_pair(1)
                 i += 1
                 stdscr.addstr(
                     start_y + len(pet_lines) + i, start_x, f"{name}: {x}", color
                 )
-            if index == selected_pet:
-                color = curses.color_pair(1)
-        for i, command in enumerate(COMMANDS):
-            if i == selected_command:
-                color = curses.color_pair(3)
-            stdscr.addstr(start_y + i, 0, command, color)
             color = curses.color_pair(1)
+            for i, command in enumerate(COMMANDS):
+                if i == selected_command:
+                    color = curses.color_pair(3)
+                stdscr.addstr(start_y + i, 0, command, color)
+                color = curses.color_pair(1)
         key = stdscr.getch()
 
         if key == KEY_LEFT:
@@ -216,6 +223,14 @@ def display_pets(stdscr: curses.window):
             selected_command += 1
         # ENTER KEY
         elif key == 10:
+            if selected_command == 3:
+                shopping = True
+                shop.refresh()
+                pet_list = shop.pets
+            if selected_command == 4:
+                shopping = False
+                pet_list = manager.pets
+
             status = process_command(
                 f"{selected_command} {manager.pets[selected_pet].name}"
             )
@@ -239,7 +254,7 @@ if __name__ == "__main__":
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
     display_pets(r)
-    manager.load(file)
+    manager.save(file)
     curses.endwin()
 
     # Use setup if just starting
