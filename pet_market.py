@@ -26,7 +26,6 @@ class PetMarket:
         for x in range(5):
             self.add_pet(
                 Pet(
-                    random.choice(["dog", "cat", "hamster"]),
                     random.choice(
                         [
                             "Rover",
@@ -40,6 +39,7 @@ class PetMarket:
                         ]
                     ),
                     0,
+                    random.choice(["dog", "cat", "hamster"]),
                     100,
                     100,
                     100,
