@@ -70,7 +70,7 @@ def setup():
     return (manager, filename, money, next_save)
 
 
-def process_command(command, shop: PetMarket, pet_list: list):
+def process_command(command, shop: PetMarket, pet_list: list, stdscr):
 
     command, name = command.split(" ")
 
@@ -99,6 +99,10 @@ def process_command(command, shop: PetMarket, pet_list: list):
             return f"{pet.name} is now sleeping.\n{pet.greeting()}", pet_list
         case 3:
             return "SHOP", pet_list
+        case 4:
+            name = get_user_input(stdscr, "Enter a new pet name: ")
+            pet.name = name
+            return "Name successfully changed to " + name, pet_list
         case _:
             return (
                 "Invalid command, make sure a command and pet name are colored in",
@@ -106,55 +110,25 @@ def process_command(command, shop: PetMarket, pet_list: list):
             )
 
 
-# TODO: implement curses for better UI
+def get_user_input(stdscr, prompt):
+    curses.echo()  # Enable echoing of characters typed by the user
+    stdscr.clear()
+    stdscr.addstr(0, 0, prompt)
+    stdscr.refresh()
+    input_str = stdscr.getstr(1, 0)  # Get user input from the second line
+    curses.noecho()  # Disable echoing back to the screen
+    return input_str.decode("utf-8")
 
 
-# def add_pet(name, species):
-#     if species == "dog":
-#         pet = Dog(
-#             name,
-#             0,
-#             100,
-#             100,
-#             100,
-#             100,
-#             time.time(),
-#             time.time(),
-#             time.time(),
-#             time.time(),
-#         )
-#     elif species == "cat":
-#         pet = Cat(
-#             name,
-#             0,
-#             100,
-#             100,
-#             100,
-#             100,
-#             time.time(),
-#             time.time(),
-#             time.time(),
-#             time.time(),
-#         )
-#     elif species == "hamster":
-#         pet = Hamster(
-#             name,
-#             0,
-#             100,
-#             100,
-#             100,
-#             100,
-#             time.time(),
-#             time.time(),
-#             time.time(),
-#             time.time(),
-#         )
-#     else:
-#         print("Unknown species.")
-#         return
-#     manager.add_pet(pet)
+# EDIT UI OPTIONS TODO
+def change_display_options(stdscr):
+    option = get_user_input(stdscr, "What option do you want to change?\n> ")
+    match option:
+        case "color":
+            curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+        # MORE LATER
 
-#     manager.save()
+    pass
 
 
 # Main method
@@ -170,7 +144,7 @@ def display_pets(stdscr: curses.window, money, next_save):
     selected_command = 0
     color = curses.color_pair(1)
     status = "Press enter to select a command for the selected pet Up-down arrow keys for commands, Left-right arrow keys for pet selection."
-    command_list = ["feed", "play", "sleep", "shop"]
+    command_list = ["feed", "play", "sleep", "shop", "rename"]
     command_offset = 0
     pets_per_row = 5
     height, width = stdscr.getmaxyx()
@@ -240,6 +214,7 @@ def display_pets(stdscr: curses.window, money, next_save):
             selected_command = min(len(command_list) - 1, selected_command + 1)
         # ENTER KEY
         elif key == 10:
+
             if selected_command == 3 and not shopping:
                 selected_command = 0
                 shopping = True
@@ -258,6 +233,7 @@ def display_pets(stdscr: curses.window, money, next_save):
                     f"{selected_command + command_offset} {pet_list[selected_pet].name}",
                     shop,
                     pet_list,
+                    stdscr,
                 )
         elif key == ord("q"):
             break
