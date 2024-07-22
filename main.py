@@ -11,9 +11,11 @@ def setup():
     # Use to speed up testing
     # new_account = False
     # filename = "pets"
+
     if "c" in input("Create new account or load saved? (C/L): ").lower():
         new_account = True
         filename = input("Enter a name for your save: ")
+        money = 100
     else:
         new_account = False
 
@@ -62,9 +64,9 @@ def setup():
         manager.save(filename)
         manager.load(filename)
     else:
-        manager.load(filename)
+        money = manager.load(filename)
 
-    return manager, filename
+    return (manager, filename, money)
 
 
 def process_command(command, shop: PetMarket, pet_list: list):
@@ -151,8 +153,10 @@ def add_pet(name, species):
     manager.save()
 
 
-def display_pets(stdscr: curses.window):
-    shop = PetMarket()
+# Main method
+def display_pets(stdscr: curses.window, money):
+    shop = PetMarket(money)
+
     shopping = False
     key = None
     selected_pet = 0
@@ -169,7 +173,7 @@ def display_pets(stdscr: curses.window):
         stdscr.clear()
 
         stdscr.addstr(1, 0, status)
-
+        stdscr.addstr(2, width // 2, f"Money: ${shop.money}")
         # Iterate over each pet and its stats
         for index, (pet) in enumerate(pet_list):
             if index == selected_pet:
@@ -241,12 +245,12 @@ def display_pets(stdscr: curses.window):
             break
         stdscr.refresh()
 
-    return height, width
+    return shop.money
 
 
 if __name__ == "__main__":
 
-    manager, file = setup()
+    manager, file, money_1 = setup()
 
     r = curses.initscr()
     curses.curs_set(0)
@@ -256,8 +260,8 @@ if __name__ == "__main__":
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_WHITE)
-    display_pets(r)
-    manager.save(file)
+    money_1 = display_pets(r, money_1)
+    manager.save(file, money_1)
     curses.endwin()
 
     # Use setup if just starting

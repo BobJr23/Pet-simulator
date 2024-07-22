@@ -4,8 +4,9 @@ from time import time
 
 
 class PetMarket:
-    def __init__(self):
+    def __init__(self, money):
         self.pets = []
+        self.money = money
 
     def add_pet(self, pet):
         self.pets.append(pet)
