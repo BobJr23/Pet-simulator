@@ -19,9 +19,18 @@ PET_TO_ASCII = {
  
 """,
     "hamster": r"""
-   __
- <(o )___
-   (  ._>
+  ^----^  
+ | ^  ^ | 
+(   <>   )
+ \_\/\/_/ 
+ 
+   """,
+    "bird": r"""
+   .-.
+  /'v'\
+ (/   \)
+==="="===< 
+   |_| 
    """,
     "sick": r"""
     
@@ -203,3 +212,36 @@ class Hamster(Pet):
     @override
     def greeting(self):
         return f"{self.name} says: Squeak!"
+
+
+class Bird(Pet):
+    def __init__(
+        self,
+        name,
+        age,
+        health,
+        hunger,
+        happiness,
+        energy,
+        last_fed,
+        last_played,
+        last_slept,
+        birth_time,
+    ):
+        super().__init__(
+            name,
+            age,
+            "bird",
+            health,
+            hunger,
+            happiness,
+            energy,
+            last_fed,
+            last_played,
+            last_slept,
+            birth_time,
+        )
+
+    @override
+    def greeting(self):
+        return f"{self.name} says: Chirp!"

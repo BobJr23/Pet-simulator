@@ -16,8 +16,10 @@ class PetMarket:
             print(f"{i + 1}: {pet.name} the {pet.species}")
 
     def purchase_pet(self, index: int):
-        if 0 < index <= len(self.pets):
-            return self.pets.pop(index + 1)
+
+        if self.money >= 20:
+            self.money -= 20
+            return self.pets.pop(index)
         else:
             print("Invalid selection.")
             return None
@@ -40,7 +42,7 @@ class PetMarket:
                         ]
                     ),
                     0,
-                    random.choice(["dog", "cat", "hamster"]),
+                    random.choice(["dog", "cat", "hamster", "bird"]),
                     100,
                     100,
                     100,

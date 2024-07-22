@@ -78,8 +78,11 @@ def process_command(command, shop: PetMarket, pet_list: list):
     match int(command):
         case -2:
             pet = shop.purchase_pet(pet_list.index(pet))
-            manager.add_pet(pet)
-            return "You bought " + pet.name, pet_list
+            if pet != None:
+                manager.add_pet(pet)
+                return "You bought " + pet.name, pet_list
+            else:
+                return "Not enough money.", pet_list
         case -1:
             shop.refresh()
             pet_list = shop.pets
@@ -105,52 +108,52 @@ def process_command(command, shop: PetMarket, pet_list: list):
 # TODO: implement curses for better UI
 
 
-def add_pet(name, species):
-    if species == "dog":
-        pet = Dog(
-            name,
-            0,
-            100,
-            100,
-            100,
-            100,
-            time.time(),
-            time.time(),
-            time.time(),
-            time.time(),
-        )
-    elif species == "cat":
-        pet = Cat(
-            name,
-            0,
-            100,
-            100,
-            100,
-            100,
-            time.time(),
-            time.time(),
-            time.time(),
-            time.time(),
-        )
-    elif species == "hamster":
-        pet = Hamster(
-            name,
-            0,
-            100,
-            100,
-            100,
-            100,
-            time.time(),
-            time.time(),
-            time.time(),
-            time.time(),
-        )
-    else:
-        print("Unknown species.")
-        return
-    manager.add_pet(pet)
-    print(f"Added {name} the {species} to your pets.")
-    manager.save()
+# def add_pet(name, species):
+#     if species == "dog":
+#         pet = Dog(
+#             name,
+#             0,
+#             100,
+#             100,
+#             100,
+#             100,
+#             time.time(),
+#             time.time(),
+#             time.time(),
+#             time.time(),
+#         )
+#     elif species == "cat":
+#         pet = Cat(
+#             name,
+#             0,
+#             100,
+#             100,
+#             100,
+#             100,
+#             time.time(),
+#             time.time(),
+#             time.time(),
+#             time.time(),
+#         )
+#     elif species == "hamster":
+#         pet = Hamster(
+#             name,
+#             0,
+#             100,
+#             100,
+#             100,
+#             100,
+#             time.time(),
+#             time.time(),
+#             time.time(),
+#             time.time(),
+#         )
+#     else:
+#         print("Unknown species.")
+#         return
+#     manager.add_pet(pet)
+
+#     manager.save()
 
 
 # Main method
@@ -173,8 +176,16 @@ def display_pets(stdscr: curses.window, money):
         stdscr.clear()
 
         stdscr.addstr(1, 0, status)
-        stdscr.addstr(2, width // 2, f"Money: ${shop.money}")
+        stdscr.addstr(2, width // 2 - 4, f"Money: ${shop.money}")
         # Iterate over each pet and its stats
+        i = 0
+        color = curses.color_pair(1)
+        for i, command in enumerate(command_list):
+            if i == selected_command:
+                color = curses.color_pair(3)
+            stdscr.addstr(5 + i, 0, command, color)
+            color = curses.color_pair(1)
+
         for index, (pet) in enumerate(pet_list):
             if index == selected_pet:
                 color = curses.color_pair(2)
@@ -184,7 +195,7 @@ def display_pets(stdscr: curses.window, money):
             row = index // pets_per_row
             col = index % pets_per_row
             start_y = (
-                row * (height // len(pet_list)) + 5
+                row * (height // len(pet_list)) * 2 + 5
             )  # Start a bit down from the top
             start_x = col * spacing_x + 15  # Start a bit in from the left
 
@@ -202,13 +213,6 @@ def display_pets(stdscr: curses.window, money):
                 stdscr.addstr(
                     start_y + len(pet_lines) + i, start_x, f"{name}: {x}", color
                 )
-            i = 0
-            color = curses.color_pair(1)
-            for i, command in enumerate(command_list):
-                if i == selected_command:
-                    color = curses.color_pair(3)
-                stdscr.addstr(start_y + i, 0, command, color)
-                color = curses.color_pair(1)
 
         key = stdscr.getch()
 
@@ -262,6 +266,7 @@ if __name__ == "__main__":
     curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_WHITE)
     money_1 = display_pets(r, money_1)
     manager.save(file, money_1)
+    print(money_1)
     curses.endwin()
 
     # Use setup if just starting
