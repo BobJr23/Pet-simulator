@@ -5,6 +5,7 @@ from pet_market import PetMarket
 import _curses as curses
 from _curses import KEY_RIGHT, KEY_LEFT, KEY_UP, KEY_DOWN
 import os
+import random
 
 
 def setup():
@@ -106,6 +107,14 @@ def process_command(command, shop: PetMarket, pet_list: list, stdscr):
         case 5:
             change_display_options(stdscr)
             return "UI settings changed", pet_list
+        case 6:
+            if shop.money >= 15:
+                shop.money -= 15
+                roll = random.randint(1, 25)
+                shop.money += roll
+                return f"You rolled a {roll}", pet_list
+            else:
+                return "Not enough money", pet_list
         case _:
             return (
                 "Invalid command, make sure a command and pet name are colored in",
@@ -118,33 +127,32 @@ def get_user_input(stdscr, prompt):
     stdscr.clear()
     stdscr.addstr(0, 0, prompt)
     stdscr.refresh()
-    input_str = stdscr.getstr(1, 0)  # Get user input from the second line
+    input_str = stdscr.getstr(1, 2)  # Get user input from the second line
     curses.noecho()  # Disable echoing back to the screen
     return input_str.decode("utf-8")
 
 
 # EDIT UI OPTIONS TODO
 def change_display_options(stdscr):
-    option = get_user_input(stdscr, "What option do you want to change?\n> ")
+    option = get_user_input(stdscr, "What option do you want to change? (Color, )\n> ")
     match option:
 
         case "color":
 
-            curses.echo()  # Enable echoing of characters typed by the user
-            stdscr.clear()
-            stdscr.addstr(
-                0,
-                0,
-                "Enter a primary text color among " + ", ".join(COLORS_DICT.keys()),
+            color_1 = get_user_input(
+                stdscr,
+                "Enter a foreground color among "
+                + ", ".join(COLORS_DICT.keys())
+                + "\n> ",
             )
+
             stdscr.refresh()
-            color_1 = stdscr.getstr(1, 0)  # Get user input from the second line
-            stdscr.clear()
-            stdscr.addstr(
-                0, 0, "Enter a background color among " + ", ".join(COLORS_DICT.keys())
+            color_2 = get_user_input(
+                stdscr,
+                "Enter a background color among "
+                + ", ".join(COLORS_DICT.keys())
+                + "\n> ",
             )
-            stdscr.refresh()
-            color_2 = stdscr.getstr(1, 0)
             curses.init_pair(1, COLORS_DICT[color_1], COLORS_DICT[color_2])
             curses.noecho()
 
@@ -166,7 +174,7 @@ def display_pets(stdscr: curses.window, money, next_save):
     selected_command = 0
     color = curses.color_pair(1)
     status = "Press enter to select a command for the selected pet Up-down arrow keys for commands, Left-right arrow keys for pet selection."
-    command_list = ["feed", "play", "sleep", "shop", "rename", "UI settings"]
+    command_list = ["feed", "play", "sleep", "shop", "rename", "UI settings", "roll"]
     command_offset = 0
     pets_per_row = 5
     height, width = stdscr.getmaxyx()
@@ -249,7 +257,15 @@ def display_pets(stdscr: curses.window, money, next_save):
                 shopping = False
                 pet_list = manager.pets
                 command_offset = 0
-                command_list = ["feed", "play", "sleep", "shop"]
+                command_list = [
+                    "feed",
+                    "play",
+                    "sleep",
+                    "shop",
+                    "rename",
+                    "UI settings",
+                    "roll",
+                ]
             else:
                 status, pet_list = process_command(
                     f"{selected_command + command_offset} {pet_list[selected_pet].name}",
