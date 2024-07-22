@@ -103,6 +103,9 @@ def process_command(command, shop: PetMarket, pet_list: list, stdscr):
             name = get_user_input(stdscr, "Enter a new pet name: ")
             pet.name = name
             return "Name successfully changed to " + name, pet_list
+        case 5:
+            change_display_options(stdscr)
+            return "UI settings changed", pet_list
         case _:
             return (
                 "Invalid command, make sure a command and pet name are colored in",
@@ -124,8 +127,27 @@ def get_user_input(stdscr, prompt):
 def change_display_options(stdscr):
     option = get_user_input(stdscr, "What option do you want to change?\n> ")
     match option:
+
         case "color":
-            curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+
+            curses.echo()  # Enable echoing of characters typed by the user
+            stdscr.clear()
+            stdscr.addstr(
+                0,
+                0,
+                "Enter a primary text color among " + ", ".join(COLORS_DICT.keys()),
+            )
+            stdscr.refresh()
+            color_1 = stdscr.getstr(1, 0)  # Get user input from the second line
+            stdscr.clear()
+            stdscr.addstr(
+                0, 0, "Enter a background color among " + ", ".join(COLORS_DICT.keys())
+            )
+            stdscr.refresh()
+            color_2 = stdscr.getstr(1, 0)
+            curses.init_pair(1, COLORS_DICT[color_1], COLORS_DICT[color_2])
+            curses.noecho()
+
         # MORE LATER
 
     pass
@@ -144,7 +166,7 @@ def display_pets(stdscr: curses.window, money, next_save):
     selected_command = 0
     color = curses.color_pair(1)
     status = "Press enter to select a command for the selected pet Up-down arrow keys for commands, Left-right arrow keys for pet selection."
-    command_list = ["feed", "play", "sleep", "shop", "rename"]
+    command_list = ["feed", "play", "sleep", "shop", "rename", "UI settings"]
     command_offset = 0
     pets_per_row = 5
     height, width = stdscr.getmaxyx()
@@ -243,7 +265,16 @@ def display_pets(stdscr: curses.window, money, next_save):
 
 
 if __name__ == "__main__":
-
+    COLORS_DICT = {
+        "red": curses.COLOR_RED,
+        "green": curses.COLOR_GREEN,
+        "blue": curses.COLOR_BLUE,
+        "black": curses.COLOR_BLACK,
+        "white": curses.COLOR_WHITE,
+        "cyan": curses.COLOR_CYAN,
+        "magenta": curses.COLOR_MAGENTA,
+        "yellow": curses.COLOR_YELLOW,
+    }
     manager, file, money_1, ns = setup()
 
     r = curses.initscr()
