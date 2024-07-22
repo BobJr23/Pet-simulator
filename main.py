@@ -61,12 +61,13 @@ def setup():
         )
         manager.add_pet(dog)
         manager.add_pet(cat)
-        manager.save(filename)
+        manager.save(filename, 100, time.time() + 86400)
+        next_save = time.time() + 86400
         manager.load(filename)
     else:
-        money = manager.load(filename)
+        money, next_save = manager.load(filename)
 
-    return (manager, filename, money)
+    return (manager, filename, money, next_save)
 
 
 def process_command(command, shop: PetMarket, pet_list: list):
@@ -157,9 +158,12 @@ def process_command(command, shop: PetMarket, pet_list: list):
 
 
 # Main method
-def display_pets(stdscr: curses.window, money):
+def display_pets(stdscr: curses.window, money, next_save):
+    # Daily login bonus coins
+    if next_save < time.time():
+        money += 50
+        next_save = time.time() + 86400
     shop = PetMarket(money)
-
     shopping = False
     key = None
     selected_pet = 0
@@ -177,6 +181,16 @@ def display_pets(stdscr: curses.window, money):
 
         stdscr.addstr(1, 0, status)
         stdscr.addstr(2, width // 2 - 4, f"Money: ${shop.money}")
+
+        if next_save < time.time():
+            money += 50
+            next_save = time.time() + 86400
+        diff = next_save - time.time()
+        stdscr.addstr(
+            2,
+            width // 2 + 10,
+            f"Next login bonus in: {int(diff // 3600)}:{int(diff % 3600 // 60)}:{int(diff % 60)}",
+        )
         # Iterate over each pet and its stats
         i = 0
         color = curses.color_pair(1)
@@ -249,12 +263,12 @@ def display_pets(stdscr: curses.window, money):
             break
         stdscr.refresh()
 
-    return shop.money
+    return shop.money, next_save
 
 
 if __name__ == "__main__":
 
-    manager, file, money_1 = setup()
+    manager, file, money_1, ns = setup()
 
     r = curses.initscr()
     curses.curs_set(0)
@@ -264,8 +278,8 @@ if __name__ == "__main__":
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_WHITE)
-    money_1 = display_pets(r, money_1)
-    manager.save(file, money_1)
+    money_1, ns = display_pets(r, money_1, ns)
+    manager.save(file, money_1, ns)
     print(money_1)
     curses.endwin()
 
